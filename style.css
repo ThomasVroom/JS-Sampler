@@ -118,6 +118,12 @@ body {
     height: 25px;
     font-size: 15px;
   }
+  button {
+    border-radius: 80px;
+    font-size: 15px;
+    width: 100px;
+    height: 25px;
+  }
 }
 
 #group-size {

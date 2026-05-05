@@ -73,6 +73,15 @@ function init(data) {
     }
     m_presets.addEventListener("change", () => {apply_preset(m_presets, false)});
 
+    // clear cache logic
+    document.getElementById("clear-button").addEventListener("click", function() {
+        var clear = confirm("Are you sure?");
+        if (clear) {
+            localStorage.removeItem("data");
+            location.reload(); // refresh page
+        }
+    });
+
     // collapsibles logic
     var coll = document.getElementsByClassName("collapsible");
     for (let i = 0; i < coll.length; i++) {
@@ -104,7 +113,7 @@ function init(data) {
 document.getElementById("data-upload").addEventListener("change", function() {
     var file = this.files[0];
     if (!file.name.endsWith("data.json")) {
-        window.alert("Incorrect file.");
+        alert("Incorrect file.");
         return;
     }
 

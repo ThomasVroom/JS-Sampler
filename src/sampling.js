@@ -143,7 +143,7 @@ function sample(data, selected_f, selected_m) {
 
     // assert selection is possible
     if (variables.length < 2) {
-        window.alert("Selection not valid.");
+        alert("Selection not valid.");
         return;
     }
 
@@ -213,7 +213,7 @@ function sample(data, selected_f, selected_m) {
 
     // assert solution was found
     if (!pairings) {
-        window.alert("No solution was found.");
+        alert("No solution was found.");
         return;
     }
 
