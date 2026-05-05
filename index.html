@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS-Sampler</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="header">
+    <h1>JS-Sampler</h1>
+  </div>
+
+  <div class="center">
+    <button type="button" class="collapsible">Change Selection</button>
+    <div id="selection">
+      <div id="presets">
+        <select id="f-presets"></select>
+        <select id="m-presets"></select>
+      </div>
+      <div id="names">
+        <ul id="f-list"></ul>
+        <ul id="m-list"></ul>
+      </div>
+    </div>
+    <button type="button" class="collapsible">Change Parameters</button>
+    <div id="settings">
+      <div class="settings-option">
+        Sampling
+        <select id="sampling-mode">
+          <option>with replacement</option>
+          <option>without replacement</option>
+        </select>
+      </div>
+      <div class="settings-option">
+        Group size
+        <select id="group-size">
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+          <option>6</option>
+          <option>7</option>
+          <option>8</option>
+        </select>
+      </div>
+      <div class="settings-option">
+        Gender bias
+        <select id="min-needed">
+          <option>auto</option>
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+        </select>
+      </div>
+      <div class="settings-option">
+        Avoid repeats
+        <select id="avoid-repeats">
+          <option>true</option>
+          <option>false</option>
+        </select>
+      </div>
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-button">
+      <button type="button" id="reset-button">↻</button>
+    </div>
+    <div class="footer-button">
+      <button type="button" id="main-button">Sample</button>
+    </div>
+    <div class="footer-button">
+      <button type="button" id="complete-button">⋙</button>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

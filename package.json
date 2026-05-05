@@ -1,0 +1,23 @@
+{
+  "name": "js-sampler",
+  "version": "1.0.0",
+  "description": "A locally-hosted random sampler.",
+  "homepage": "https://github.com/ThomasVroom/JS-Sampler#readme",
+  "bugs": {
+    "url": "https://github.com/ThomasVroom/JS-Sampler/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThomasVroom/JS-Sampler.git"
+  },
+  "license": "ISC",
+  "author": "ThomasVroom",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "start": "live-server"
+  },
+  "dependencies": {
+    "live-server": "^1.2.2"
+  }
+}
