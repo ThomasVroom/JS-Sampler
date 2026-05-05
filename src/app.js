@@ -1,14 +1,7 @@
-// attempt to load existing data
-var data = localStorage.getItem("data");
-if (!data) {
-    // ask user for data.json (TODO)
-    data = await fetch('data.json').then(r => r.json());
-    // store data (TODO)
-}
-console.log("loaded data:", data);
-
 // load web components
 function init(data) {
+    reset(); // clear results div
+
     // load presets
     const default_preset = "Presets";
     const all_presets_f = [default_preset, "All", "None"].concat([...new Set(data.f.flatMap(item => item.presets))].slice(1));
@@ -106,4 +99,30 @@ function init(data) {
         complete(data, selected_f, selected_m);
     });
 }
-init(data);
+
+// file uploading logic
+document.getElementById("data-upload").addEventListener("change", function() {
+    var file = this.files[0];
+    if (!file.name.endsWith("data.json")) {
+        window.alert("Incorrect file.");
+        return;
+    }
+
+    // read file
+    const reader = new FileReader();
+    reader.onload = function() {
+        var data = JSON.parse(reader.result);
+        console.log("loaded data:", data);
+        localStorage.setItem("data", JSON.stringify(data));
+        init(data);
+    };
+    reader.readAsText(file);
+});
+
+// attempt to load existing data
+var data = localStorage.getItem("data");
+if (data) {
+    data = JSON.parse(data);
+    console.log("loaded data:", data);
+    init(data);
+}

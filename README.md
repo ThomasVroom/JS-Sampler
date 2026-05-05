@@ -6,6 +6,5 @@ A locally-hosted random sampler.
 - Access through [link] for online use.
 
 ## TODO
-- if localStorage is empty, prompt user to upload relevant .json file.
 - add dice options
 - add more presets + incompatibilities
