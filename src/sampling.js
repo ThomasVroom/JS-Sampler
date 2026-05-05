@@ -42,7 +42,7 @@ function shuffle(array) {
     }
 }
 
-// retrieve settings from UI
+// retrieve settings from web components
 function retrieve_settings() {
     let settings = {};
     settings.with_replacement = !String(document.getElementById("sampling-mode").value).startsWith("without");
@@ -61,7 +61,7 @@ var results = document.getElementById("results");
 var current = {"pairing": null}; // keeps track of current pairings
 var last = null; // previous pairing (for avoiding repeats)
 
-// push results to UI
+// push results to div
 function push_results(pairings, number) {
     // collect members
     var members = [];

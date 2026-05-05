@@ -109,7 +109,7 @@ function init(data) {
     });
 }
 
-// file uploading logic
+// file reading logic
 document.getElementById("data-upload").addEventListener("change", function() {
     var file = this.files[0];
     if (!file.name.endsWith("data.json")) {
