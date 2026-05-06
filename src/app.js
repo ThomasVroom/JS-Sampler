@@ -74,6 +74,15 @@ function init(data) {
     }
     m_presets.addEventListener("change", () => {apply_preset(m_presets, false)});
 
+    // add dice
+    var dice_select = document.getElementById("dice");
+    const dice_options = data.dice.map(item => item.name);
+    for (let i = 0; i < dice_options.length; i++) {
+        var option = document.createElement('option');
+        option.appendChild(document.createTextNode(dice_options[i]));
+        dice_select.appendChild(option);
+    }
+
     // clear cache logic
     document.getElementById("clear-button").addEventListener("click", function() {
         var clear = confirm("Are you sure?");

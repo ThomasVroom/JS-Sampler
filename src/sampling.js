@@ -42,6 +42,27 @@ function shuffle(array) {
     }
 }
 
+// weighted sample of dice items
+function dice_sample(data, index) {
+    if (index > 0) {
+        const items = data.dice[index-1].items;
+        const sum = items.map(item => item.weight).reduce((prev, next) => prev + next);
+
+        // generate random number in [1, sum]
+        var r = Math.floor(Math.random() * sum) + 1;
+
+        // assign outcome based on weight
+        var cntr = 0;
+        for (let i = 0; i < items.length; i++) {
+            cntr += items[i].weight;
+            if (r <= cntr) {
+                return items[i].text;
+            }
+        }
+    }
+    return null;
+}
+
 // retrieve parameters
 function retrieve_settings() {
     let settings = {};
@@ -49,6 +70,7 @@ function retrieve_settings() {
     settings.group_size = document.getElementById("group-size").value;
     settings.min_needed = String(document.getElementById("min-needed").value);
     settings.no_repeats = String(document.getElementById("avoid-repeats").value) == "true";
+    settings.dice = document.getElementById("dice").selectedIndex;
     return settings;
 }
 
@@ -62,7 +84,7 @@ var current = {"pairing": null}; // keeps track of current pairings
 var last = null; // previous pairing (for avoiding repeats)
 
 // push results to div
-function push_results(pairings, number) {
+function push_results(pairings, number, item) {
     // collect members
     var members = [];
     var keys = Object.keys(pairings);
@@ -75,12 +97,14 @@ function push_results(pairings, number) {
 
     // create HTML
     var frag = document.createDocumentFragment();
+    var sub_frag = document.createElement('div');
+    sub_frag.className = "sub-result";
 
     // title
     var title = document.createElement('div');
     title.className = "group-title";
     title.innerText = "Group " + number;
-    frag.appendChild(title);
+    sub_frag.appendChild(title);
 
     // add members
     var member_list = document.createElement('ul');
@@ -91,9 +115,18 @@ function push_results(pairings, number) {
         m.innerText = members[i].name;
         member_list.appendChild(m);
     }
-    frag.appendChild(member_list);
+    sub_frag.appendChild(member_list);
+
+    // add dice item
+    if (item) {
+        var dice_item = document.createElement('div');
+        dice_item.className = "dice-item";
+        dice_item.innerText = members[0].is_f ? item.f : item.m;
+        sub_frag.appendChild(dice_item);
+    }
 
     // push results
+    frag.appendChild(sub_frag);
     results.appendChild(frag);
 }
 
@@ -111,7 +144,7 @@ function sample(data, selected_f, selected_m) {
     // feed results if already computed
     if (!settings.with_replacement && current.pairing) {
         if (current.index <= current.n_groups) {
-            push_results(current.pairing, current.index);
+            push_results(current.pairing, current.index, dice_sample(data, settings.dice));
             current.index++;
         }
         return;
@@ -229,7 +262,7 @@ function sample(data, selected_f, selected_m) {
     last = pairings;
 
     // push result
-    push_results(pairings, 1);
+    push_results(pairings, 1, dice_sample(data, settings.dice));
 }
 
 // auto-complete logic
@@ -240,13 +273,13 @@ function complete(data, selected_f, selected_m) {
     if (!settings.with_replacement) {
         if (current.pairing) { // push all results
             for (; current.index <= current.n_groups; current.index++) {
-                push_results(current.pairing, current.index);
+                push_results(current.pairing, current.index, dice_sample(data, settings.dice));
             }
         }
         else {
             sample(data, selected_f, selected_m);
             if (current.pairing) { // if sample was successful
-                complete();
+                complete(data, selected_f, selected_m);
             }
         }
     }
