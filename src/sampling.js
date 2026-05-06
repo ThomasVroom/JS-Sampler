@@ -42,7 +42,7 @@ function shuffle(array) {
     }
 }
 
-// retrieve settings from web components
+// retrieve parameters
 function retrieve_settings() {
     let settings = {};
     settings.with_replacement = !String(document.getElementById("sampling-mode").value).startsWith("without");
@@ -127,7 +127,7 @@ function sample(data, selected_f, selected_m) {
 
     // VARIABLES
     var variables = [];
-    for (; true; group++) {
+    for (; settings.with_replacement ? group < 2 : true; group++) {
         var less_f = (n_f == n_m ? Math.random() < 0.5 : n_f < n_m);
         if ((less_f ? n_f : n_m) >= min_needed && (less_f ? n_m : n_f) >= settings.group_size - min_needed) {
             for (let i = 0; i < settings.group_size; i++) {
@@ -181,6 +181,9 @@ function sample(data, selected_f, selected_m) {
             var prev_group = last_keys.find(key => last[key] == value);
             if (prev_group) {
                 prev_group = to_group(prev_group); // previous group of value
+                if (prev_group == current_group) { // cannot be put in the same group again
+                    return false;
+                }
                 var perfect_match = true;
                 for (let i = 0; i < last_keys.length; i++) {
                     if (to_group(last_keys[i]) == prev_group && last[last_keys[i]] != value) { // loop over all people in past group of value

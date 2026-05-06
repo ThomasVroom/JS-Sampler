@@ -8,3 +8,4 @@ A locally-hosted random sampler.
 ## TODO
 - add dice options
 - add more presets + incompatibilities
+- make divs scrollable instead of extending

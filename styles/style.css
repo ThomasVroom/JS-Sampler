@@ -71,12 +71,18 @@ body {
     width: 150px;
     height: 50px;
     font-size: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
   }
+}
+
+#f-presets {
+  margin-left: 5px;
 }
 
 #m-presets { /* right-aligned */
   margin-left: auto;
-  margin-right: 0;
+  margin-right: 5px;
   direction: rtl;
 }
 
@@ -119,6 +125,8 @@ body {
     font-size: 15px;
   }
   button {
+    color: black;
+    border: 1px solid black;
     border-radius: 80px;
     font-size: 15px;
     width: 100px;

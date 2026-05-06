@@ -1,5 +1,6 @@
 // load web components
 function init(data) {
+    console.log("loaded data:", data);
     reset(); // clear results div
 
     // load presets
@@ -109,29 +110,27 @@ function init(data) {
     });
 }
 
-// file reading logic
-document.getElementById("data-upload").addEventListener("change", function() {
-    var file = this.files[0];
-    if (!file.name.endsWith("data.json")) {
-        alert("Incorrect file.");
-        return;
-    }
-
-    // read file
-    const reader = new FileReader();
-    reader.onload = function() {
-        var data = JSON.parse(reader.result);
-        console.log("loaded data:", data);
-        localStorage.setItem("data", JSON.stringify(data));
-        init(data);
-    };
-    reader.readAsText(file);
-});
-
 // attempt to load existing data
 var data = localStorage.getItem("data");
 if (data) {
-    data = JSON.parse(data);
-    console.log("loaded data:", data);
-    init(data);
+    init(JSON.parse(data));
+}
+else {
+    // file reading logic
+    document.getElementById("data-upload").addEventListener("change", function() {
+        var file = this.files[0];
+        if (!file.name.endsWith("data.json")) {
+            alert("Incorrect file.");
+            return;
+        }
+
+        // read file
+        const reader = new FileReader();
+        reader.onload = function() {
+            data = JSON.parse(reader.result);
+            localStorage.setItem("data", JSON.stringify(data));
+            init(data);
+        };
+        reader.readAsText(file);
+    });
 }
