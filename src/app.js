@@ -76,7 +76,7 @@ function init(data) {
 
     // add dice
     var dice_select = document.getElementById("dice");
-    const dice_options = data.dice.map(item => item.name);
+    const dice_options = Object.keys(data.dice);
     for (let i = 0; i < dice_options.length; i++) {
         var option = document.createElement('option');
         option.appendChild(document.createTextNode(dice_options[i]));

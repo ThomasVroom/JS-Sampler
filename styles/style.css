@@ -138,7 +138,7 @@ body {
   width: 45px;
 }
 
-#avoid-repeats {
+#avoid-repeats, #additional-sampling {
   width: 65px;
 }
 
@@ -193,7 +193,7 @@ body {
 }
 
 .dice-item {
-  font-size: 14.5px;
+  font-size: 15px;
   color: darkgray;
   margin-bottom: 10px;
   margin-left: 15px;

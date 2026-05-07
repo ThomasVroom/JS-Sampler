@@ -46,33 +46,66 @@ function shuffle(array) {
 }
 
 // weighted sample of dice items
-function dice_sample(data, index) {
-    if (index > 0) {
-        const items = data.dice[index-1].items;
-        const sum = items.map(item => item.weight).reduce((prev, next) => prev + next);
+function dice_sample(data, settings, sampling_args) {
+    const items = data.dice[settings.dice].filter((i) => i.domain.includes(sampling_args.person.is_f ? 'f' : 'm'));
+    const sum = items.map(item => item.weight).reduce((prev, next) => prev + next);
 
-        // generate random number in [1, sum]
-        var r = Math.floor(Math.random() * sum) + 1;
+    // generate random number in [1, sum]
+    var r = Math.floor(Math.random() * sum) + 1;
 
-        // assign outcome based on weight
-        var cntr = 0;
-        for (let i = 0; i < items.length; i++) {
-            cntr += items[i].weight;
-            if (r <= cntr) {
-                return items[i].text;
+    // assign outcome based on weight
+    var cntr = 0;
+    for (let i = 0; i < items.length; i++) {
+        cntr += items[i].weight;
+        if (r <= cntr) { // outcome
+            var additional_samples = [];
+
+            // additional sampling
+            if (settings.additional && items[i].additional) {
+                var do_not_sample = (sampling_args.person.is_f ? data.f : data.m).find(p => p.name == sampling_args.person.name).incompatible;
+                do_not_sample.push(sampling_args.person.name); // cannot sample self
+                var elem = items[i].additional.split(" ");
+
+                // convert for set operations
+                var f_set = new Set(sampling_args.selected_f);
+                var m_set = new Set(sampling_args.selected_m);
+                var excl = new Set(do_not_sample);
+
+                // repeat for all elements
+                for (let i = 0; i < elem.length; i++) {
+                    var range = new Set();
+                    if (elem[i] == "opp") { // opposite
+                        range = (sampling_args.person.is_f ? m_set : f_set).difference(excl);
+                    }
+                    else if (elem[i] == "f") {
+                        range = f_set.difference(excl);
+                    }
+                    else if (elem[i] == "m") {
+                        range = m_set.difference(excl);
+                    }
+                    if (range.size > 0) {
+                        var sampled = Array.from(range)[Math.floor(Math.random() * range.size)];
+                        excl.add(sampled); // exclude for same sample procedure
+                        additional_samples.push(sampled);
+                    }
+                }
             }
+
+            // return text and any additional samples of outcome
+            return {"text": items[i].text, "additional": additional_samples};
         }
     }
-    return null;
 }
 
-// retrieve parameters
+// retrieve sampling parameters
 function retrieve_settings() {
     let settings = {};
     settings.with_replacement = !String(document.getElementById("sampling-mode").value).startsWith("without");
     settings.group_size = document.getElementById("group-size").value;
     settings.no_repeats = String(document.getElementById("avoid-repeats").value) == "true";
-    settings.dice = document.getElementById("dice").selectedIndex;
+    settings.dice = String(document.getElementById("dice").value);
+    if (settings.dice == "none") settings.dice = null;
+    settings.additional = String(document.getElementById("additional-sampling").value) == "true";
     return settings;
 }
 
@@ -81,7 +114,7 @@ var current = {"pairing": null}; // keeps track of current pairings
 var last = null; // previous pairing (for avoiding repeats)
 
 // push results to div
-function push_results(pairings, number, item) {
+function push_results(pairings, number, data, settings, selected_f, selected_m) {
     // collect members
     var members = [];
     var keys = Object.keys(pairings);
@@ -115,10 +148,19 @@ function push_results(pairings, number, item) {
     sub_frag.appendChild(member_list);
 
     // add dice item
-    if (item) {
+    if (settings.dice) {
+        var dice_result = dice_sample(data,settings, {"person": members[0], "selected_f": selected_f, "selected_m": selected_m});
         var dice_item = document.createElement('div');
         dice_item.className = "dice-item";
-        dice_item.innerText = members[0].is_f ? item.f : item.m;
+        dice_item.innerHTML = dice_result.text;
+
+        // additional samples
+        var addit = dice_result.additional;
+        for (let i = 0; i < addit.length; i++) {
+            if (i == 0) dice_item.innerHTML += " → ";
+            dice_item.innerHTML += ("<span class=\""+(selected_f.includes(addit[i]) ? "f" : "m")+"\">"+addit[i]+"</span>");
+            if (i < addit.length - 1) dice_item.innerHTML += ", ";
+        }
         sub_frag.appendChild(dice_item);
     }
 
@@ -141,7 +183,7 @@ function sample(data, selected_f, selected_m) {
     // feed results if already computed
     if (!settings.with_replacement && current.pairing) {
         if (current.index <= current.n_groups) {
-            push_results(current.pairing, current.index, dice_sample(data, settings.dice));
+            push_results(current.pairing, current.index, data, settings, selected_f, selected_m);
             current.index++;
         }
         return;
@@ -255,7 +297,7 @@ function sample(data, selected_f, selected_m) {
     last = pairings;
 
     // push result
-    push_results(pairings, 1, dice_sample(data, settings.dice));
+    push_results(pairings, 1, data, settings, selected_f, selected_m);
 }
 
 // auto-complete logic
@@ -266,7 +308,7 @@ function complete(data, selected_f, selected_m) {
     if (!settings.with_replacement) {
         if (current.pairing) { // push all results
             for (; current.index <= current.n_groups; current.index++) {
-                push_results(current.pairing, current.index, dice_sample(data, settings.dice));
+                push_results(current.pairing, current.index, data, settings, selected_f, selected_m);
             }
         }
         else {
