@@ -90,6 +90,7 @@ function push_results(pairings, number, item) {
             members.push({'name': keys[i].slice(1), 'is_f': keys[i][0] == 'f'});
         }
     }
+    shuffle(members); // add randomization
 
     // create HTML
     var frag = document.createDocumentFragment();
@@ -157,6 +158,7 @@ function sample(data, selected_f, selected_m) {
     // DOMAINS
     var domains = {};
     var possible_groups = Array.from({length: Math.ceil(variables.length / settings.group_size)}, (_, i) => i + 1);
+    shuffle(possible_groups); // add randomization
     for (let i = 0; i < variables.length; i++) {
         domains[variables[i]] = possible_groups;
     }
@@ -235,11 +237,20 @@ function sample(data, selected_f, selected_m) {
         return;
     }
 
+    // if one group is unbalanced, move to the back
+    var last_group = possible_groups[possible_groups.length - 1];
+    if (last_group != possible_groups.length && Object.values(pairings).reduce((a, v) => (v === last_group ? a + 1 : a), 0) < settings.group_size) {
+        for (let i = 0; i < variables.length; i++) {
+            if (pairings[variables[i]] == last_group) pairings[variables[i]] = possible_groups.length;
+            else if (pairings[variables[i]] == possible_groups.length) pairings[variables[i]] = last_group;
+        }
+    }
+
     // save results
     if (!settings.with_replacement) {
         current.pairing = pairings;
         current.index = 2;
-        current.n_groups = Math.max(...Object.values(pairings));
+        current.n_groups = possible_groups.length;
     }
     last = pairings;
 
