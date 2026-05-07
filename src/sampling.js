@@ -3,16 +3,18 @@ function solveCSP({
     variables, // Array of variable names
     domains,   // Map: var -> array of possible values
     isValid,   // function(assignment, variable, value) -> boolean
+    nextVar,   // function(assignment, variables) -> variable
 }) {
     function backtrack(assignment) {
         // if all variables assigned -> solution found
         if (Object.keys(assignment).length === variables.length) {
             return assignment;
         }
-        // pick next unassigned variable (MRV)
-        const unassigned = variables
-            .filter(v => !(v in assignment))
-            .sort((a, b) => domains[a].length - domains[b].length)[0];
+
+        // pick next unassigned variable
+        const remaining = variables.filter(v => !(v in assignment));
+        const unassigned = nextVar(assignment, remaining);
+
         for (const value of domains[unassigned]) {
             if (isValid(assignment, unassigned, value)) {
                 assignment[unassigned] = value;
@@ -21,6 +23,7 @@ function solveCSP({
                 delete assignment[unassigned]; // backtrack
             }
         }
+
         return null; // no solution
     }
     return backtrack({});
@@ -147,12 +150,13 @@ function sample(data, selected_f, selected_m) {
     reset();
 
     // VARIABLES
+    var less_f = selected_f.length < selected_m.length;
     var variables = selected_f.map(i => 'f' + i).concat(selected_m.map(i => 'm' + i));
     shuffle(variables); // solver is deterministic -> add randomization beforehand
 
     // DOMAINS
     var domains = {};
-    var possible_groups = Array.from({length: variables.length}, (_, i) => i + 1);
+    var possible_groups = Array.from({length: Math.ceil(variables.length / settings.group_size)}, (_, i) => i + 1);
     for (let i = 0; i < variables.length; i++) {
         domains[variables[i]] = possible_groups;
     }
@@ -162,14 +166,20 @@ function sample(data, selected_f, selected_m) {
         // e.g. {mM1: 1}, fF1, 1
         var keys = Object.keys(assignment);
 
-        // 1. no repeats
+        // 1. use all groups
+        var used_groups = new Set(Object.values(assignment));
+        if (used_groups.size < possible_groups.length && used_groups.has(value)) {
+            return false;
+        }
+
+        // 2. no repeats
         if (settings.no_repeats && last) {
             if (last[variable] == value) { // cannot be in the same group again
                 return false;
             }
         }
 
-        // 2. group sizes
+        // 3. group sizes (upper bound)
         var current_group_size = Object.values(assignment).reduce((a, v) => (v === value ? a + 1 : a), 0);
         if (current_group_size == settings.group_size) {
             return false;
@@ -178,16 +188,20 @@ function sample(data, selected_f, selected_m) {
             return true; // next checks not needed
         }
 
-        // 3. balancing
-        if (current_group_size == Math.floor(settings.group_size / 2)) {
-            for (let i = 0; i < keys.length; i++) { // find all of current group
+        // 4. balancing
+        if (variable[0] == (less_f ? 'f' : 'm') && current_group_size > 0) {
+            var cntr = 0;
+            for (let i = 0; i < keys.length; i++) {
                 if (assignment[keys[i]] == value && keys[i][0] == variable[0]) {
-                    return false;
+                    cntr++;
                 }
+            }
+            if ((cntr + 1) / settings.group_size > 0.67) { // max % of minority group
+                return false;
             }
         }
 
-        // 4. incompatibilities
+        // 5. incompatibilities
         var incompatibilities = (variable[0] == 'f' ? data.f : data.m).find(p => p.name == variable.slice(1)).incompatible;
         for (let i = 0; i < keys.length; i++) { // find all of current group
             if (assignment[keys[i]] == value && incompatibilities.includes(keys[i].slice(1))) {
@@ -199,8 +213,20 @@ function sample(data, selected_f, selected_m) {
         return true;
     }
 
+    // SELECTION
+    function nextVar(assignment, variables) {
+        if (new Set(Object.values(assignment)).size < possible_groups.length) {
+            // fewest first
+            return variables.sort((a, b) => ((a[0] == 'f') != less_f) - ((b[0] == 'f') != less_f))[0];
+        }
+        else {
+            // random
+            return variables[Math.floor(Math.random() * variables.length)];
+        }
+    }
+
     // solve CSP for valid pairings
-    const pairings = solveCSP({variables, domains, isValid});
+    const pairings = solveCSP({variables, domains, isValid, nextVar});
     console.log(pairings);
 
     // assert solution was found
