@@ -68,7 +68,6 @@ function retrieve_settings() {
     let settings = {};
     settings.with_replacement = !String(document.getElementById("sampling-mode").value).startsWith("without");
     settings.group_size = document.getElementById("group-size").value;
-    settings.min_needed = String(document.getElementById("min-needed").value);
     settings.no_repeats = String(document.getElementById("avoid-repeats").value) == "true";
     settings.dice = document.getElementById("dice").selectedIndex;
     return settings;
@@ -93,7 +92,6 @@ function push_results(pairings, number, item) {
             members.push({'name': pairings[keys[i]], 'is_f': keys[i].slice(-1) == 'F'});
         }
     }
-    shuffle(members); // shuffle results so it feels more random
 
     // create HTML
     var frag = document.createDocumentFragment();
@@ -155,7 +153,7 @@ function sample(data, selected_f, selected_m) {
 
     var n_f = selected_f.length;
     var n_m = selected_m.length;
-    var min_needed = settings.min_needed == "auto" ? Math.floor(settings.group_size / 2) : parseInt(settings.min_needed);
+    var min_needed = Math.floor(settings.group_size / 2);
     var group = 1;
 
     // VARIABLES
