@@ -73,11 +73,6 @@ function retrieve_settings() {
     return settings;
 }
 
-// convert variable string to group number
-function to_group(str) {
-    return parseInt(str.split('_')[0]);
-}
-
 var results = document.getElementById("results");
 var current = {"pairing": null}; // keeps track of current pairings
 var last = null; // previous pairing (for avoiding repeats)
@@ -88,8 +83,8 @@ function push_results(pairings, number, item) {
     var members = [];
     var keys = Object.keys(pairings);
     for (let i = 0; i < keys.length; i++) {
-        if (to_group(keys[i]) == number) {
-            members.push({'name': pairings[keys[i]], 'is_f': keys[i].slice(-1) == 'F'});
+        if (pairings[keys[i]] == number) {
+            members.push({'name': keys[i].slice(1), 'is_f': keys[i][0] == 'f'});
         }
     }
 
@@ -151,89 +146,52 @@ function sample(data, selected_f, selected_m) {
     // reset results
     reset();
 
-    var n_f = selected_f.length;
-    var n_m = selected_m.length;
-    var min_needed = Math.floor(settings.group_size / 2);
-    var group = 1;
-
     // VARIABLES
-    var variables = [];
-    for (; settings.with_replacement ? group < 2 : true; group++) {
-        var less_f = (n_f == n_m ? Math.random() < 0.5 : n_f < n_m);
-        if ((less_f ? n_f : n_m) >= min_needed && (less_f ? n_m : n_f) >= settings.group_size - min_needed) {
-            for (let i = 0; i < settings.group_size; i++) {
-                variables.push(group+'_'+i+(i < min_needed ? (less_f ? 'F' : 'M') : (less_f ? 'M' : 'F')));
-            }
-            n_f -= less_f ? min_needed : settings.group_size - min_needed;
-            n_m -= less_f ? settings.group_size - min_needed : min_needed;
-        }
-        else { // no more groups possible
-            break;
-        }
-    }
-
-    // assert selection is possible
-    if (variables.length < 2) {
-        alert("Selection not valid.");
-        return;
-    }
+    var variables = selected_f.map(i => 'f' + i).concat(selected_m.map(i => 'm' + i));
+    shuffle(variables); // solver is deterministic -> add randomization beforehand
 
     // DOMAINS
     var domains = {};
+    var possible_groups = Array.from({length: variables.length}, (_, i) => i + 1);
     for (let i = 0; i < variables.length; i++) {
-        domains[variables[i]] = [...(variables[i].endsWith('F') ? selected_f : selected_m)];
-        shuffle(domains[variables[i]]); // solver is deterministic -> add randomization beforehand
+        domains[variables[i]] = possible_groups;
     }
 
     // CONSTRAINTS
     function isValid(assignment, variable, value) {
-        // e.g. {1_0M: M1}, 2_0F, M2
+        // e.g. {mM1: 1}, fF1, 1
+        var keys = Object.keys(assignment);
 
-        // 1. no duplicate people
-        if (Object.values(assignment).includes(value)) {
-            return false;
+        // 1. no repeats
+        if (settings.no_repeats && last) {
+            if (last[variable] == value) { // cannot be in the same group again
+                return false;
+            }
         }
 
-        // 2. incompatibilities
-        var current_group = to_group(variable);
-        var current_person = (variable.endsWith('F') ? data.f : data.m).find(p => p.name == value);
-        var keys = Object.keys(assignment);
-        for (let i = 0; i < keys.length; i++) {
-            if (to_group(keys[i]) == current_group) {
-                if (current_person.incompatible.includes(assignment[keys[i]])) {
+        // 2. group sizes
+        var current_group_size = Object.values(assignment).reduce((a, v) => (v === value ? a + 1 : a), 0);
+        if (current_group_size == settings.group_size) {
+            return false;
+        }
+        if (settings.group_size == 1) {
+            return true; // next checks not needed
+        }
+
+        // 3. balancing
+        if (current_group_size == Math.floor(settings.group_size / 2)) {
+            for (let i = 0; i < keys.length; i++) { // find all of current group
+                if (assignment[keys[i]] == value && keys[i][0] == variable[0]) {
                     return false;
                 }
             }
         }
 
-        // 3. no repeats
-        if (settings.no_repeats && last) {
-            var last_keys = Object.keys(last);
-            var prev_group = last_keys.find(key => last[key] == value);
-            if (prev_group) {
-                prev_group = to_group(prev_group); // previous group of value
-                if (prev_group == current_group) { // cannot be put in the same group again
-                    return false;
-                }
-                var perfect_match = true;
-                for (let i = 0; i < last_keys.length; i++) {
-                    if (to_group(last_keys[i]) == prev_group && last[last_keys[i]] != value) { // loop over all people in past group of value
-                        var new_group = keys.find(key => assignment[key] == last[last_keys[i]]); // current group of person in past group of value
-                        if (new_group) {
-                            if (to_group(new_group) != current_group) {
-                                perfect_match = false;
-                                break;
-                            }
-                        }
-                        else { // person is not assigned
-                            perfect_match = false;
-                            break;
-                        }
-                    }
-                }
-                if (perfect_match) { // no whole-group repeats
-                    return false;
-                }
+        // 4. incompatibilities
+        var incompatibilities = (variable[0] == 'f' ? data.f : data.m).find(p => p.name == variable.slice(1)).incompatible;
+        for (let i = 0; i < keys.length; i++) { // find all of current group
+            if (assignment[keys[i]] == value && incompatibilities.includes(keys[i].slice(1))) {
+                return false;
             }
         }
 
@@ -255,7 +213,7 @@ function sample(data, selected_f, selected_m) {
     if (!settings.with_replacement) {
         current.pairing = pairings;
         current.index = 2;
-        current.n_groups = group-1;
+        current.n_groups = Math.max(...Object.values(pairings));
     }
     last = pairings;
 
