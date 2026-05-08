@@ -199,58 +199,63 @@ function sample(data, selected_f, selected_m) {
 
     // DOMAINS
     var domains = {};
-    var possible_groups = Array.from({length: Math.ceil(variables.length / settings.group_size)}, (_, i) => i + 1);
+    var possible_groups = Array.from({length: Math.ceil(variables.length / settings.group_size)}, (_, i) => i + 1).slice(1);
     shuffle(possible_groups); // add randomization
+    possible_groups = [1].concat(possible_groups); // ensure 1 is always the first group
     for (let i = 0; i < variables.length; i++) {
         domains[variables[i]] = possible_groups;
     }
 
     // CONSTRAINTS
     function isValid(assignment, variable, value) {
-        // e.g. {mM1: 1}, fF1, 1
         var keys = Object.keys(assignment);
+        var values = Object.values(assignment);
 
-        // 1. use all groups
-        var used_groups = new Set(Object.values(assignment));
-        if (used_groups.size < possible_groups.length && used_groups.has(value)) {
-            return false;
-        }
-
-        // 2. no repeats
+        // 1. different groups
         if (settings.no_repeats && last) {
             if (last[variable] == value) { // cannot be in the same group again
                 return false;
             }
         }
 
+        // 2. use all groups
+        var used_groups = new Set(values);
+        if (used_groups.size < possible_groups.length && used_groups.has(value)) {
+            return false;
+        }
+
         // 3. group sizes (upper bound)
-        var current_group_size = Object.values(assignment).reduce((a, v) => (v === value ? a + 1 : a), 0);
+        var current_group_size = values.reduce((a, v) => (v === value ? a + 1 : a), 0);
         if (current_group_size == settings.group_size) {
             return false;
         }
-        if (settings.group_size == 1) {
-            return true; // next checks not needed
-        }
+        if (settings.group_size == 1 || current_group_size == 0) return true; // next checks not needed
 
-        // 4. balancing
-        if (variable[0] == (less_f ? 'f' : 'm') && current_group_size > 0) {
-            var cntr = 0;
-            for (let i = 0; i < keys.length; i++) {
-                if (assignment[keys[i]] == value && keys[i][0] == variable[0]) {
-                    cntr++;
-                }
-            }
-            if ((cntr + 1) / settings.group_size > 0.67) { // max % of minority group
-                return false;
-            }
-        }
-
-        // 5. incompatibilities
+        var cntr = 0;
+        var exact_match = true;
         var incompatibilities = (variable[0] == 'f' ? data.f : data.m).find(p => p.name == variable.slice(1)).incompatible;
-        for (let i = 0; i < keys.length; i++) { // find all of current group
-            if (assignment[keys[i]] == value && incompatibilities.includes(keys[i].slice(1))) {
-                return false;
+        var prev_group = last ? keys.filter(i => last[i] == last[variable]) : null;
+
+        // find all of current group
+        for (let i = 0; i < keys.length; i++) {
+            if (assignment[keys[i]] == value) {
+                // 4. incompatibilities
+                if (incompatibilities.includes(keys[i].slice(1))) {
+                    return false;
+                }
+                if (!last || !prev_group.includes(keys[i])) exact_match = false;
+                if (keys[i][0] == variable[0]) cntr++;
             }
+        }
+
+        // 5. no group repeats
+        if (settings.no_repeats && exact_match) {
+            return false;
+        }
+
+        // 6. balancing
+        if (variable[0] == (less_f ? 'f' : 'm') && (cntr + 1) / settings.group_size > 0.67) {
+            return false;
         }
 
         // assignment is valid
@@ -271,7 +276,6 @@ function sample(data, selected_f, selected_m) {
 
     // solve CSP for valid pairings
     const pairings = solveCSP({variables, domains, isValid, nextVar});
-    console.log(pairings);
 
     // assert solution was found
     if (!pairings) {
@@ -280,15 +284,20 @@ function sample(data, selected_f, selected_m) {
     }
 
     // if one group is unbalanced, move to the back
-    var last_group = possible_groups[possible_groups.length - 1];
-    if (last_group != possible_groups.length && Object.values(pairings).reduce((a, v) => (v === last_group ? a + 1 : a), 0) < settings.group_size) {
-        for (let i = 0; i < variables.length; i++) {
-            if (pairings[variables[i]] == last_group) pairings[variables[i]] = possible_groups.length;
-            else if (pairings[variables[i]] == possible_groups.length) pairings[variables[i]] = last_group;
+    var count = {};
+    Object.values(pairings).forEach(ele => {count[ele] = (count[ele] || 0) + 1;});
+    for (let i = 1; i < possible_groups.length; i++) {
+        if (count[i] < settings.group_size) {
+            for (let j = 0; j < variables.length; j++) {
+                if (pairings[variables[j]] == i) pairings[variables[j]] = possible_groups.length;
+                else if (pairings[variables[j]] == possible_groups.length) pairings[variables[j]] = i;
+            }
+            break;
         }
     }
 
     // save results
+    console.log(pairings);
     if (!settings.with_replacement) {
         current.pairing = pairings;
         current.index = 2;
