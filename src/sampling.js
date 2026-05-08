@@ -211,9 +211,9 @@ function sample(data, selected_f, selected_m) {
         var keys = Object.keys(assignment);
         var values = Object.values(assignment);
 
-        // 1. different groups
-        if (settings.no_repeats && last) {
-            if (last[variable] == value) { // cannot be in the same group again
+        // 1. no repeats in group 1
+        if (settings.no_repeats && last && value == 1) {
+            if (last[variable] == 1) { // cannot be in group 1 again
                 return false;
             }
         }
@@ -249,7 +249,7 @@ function sample(data, selected_f, selected_m) {
         }
 
         // 5. no group repeats
-        if (settings.no_repeats && exact_match) {
+        if (!settings.with_replacement && settings.no_repeats && exact_match) {
             return false;
         }
 
