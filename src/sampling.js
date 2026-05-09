@@ -202,6 +202,7 @@ function sample(data, selected_f, selected_m) {
     var possible_groups = Array.from({length: Math.ceil(variables.length / settings.group_size)}, (_, i) => i + 1).slice(1);
     shuffle(possible_groups); // add randomization
     possible_groups = [1].concat(possible_groups); // ensure 1 is always the first group
+    if (settings.group_size == 1) shuffle(possible_groups);
     for (let i = 0; i < variables.length; i++) {
         domains[variables[i]] = possible_groups;
     }
