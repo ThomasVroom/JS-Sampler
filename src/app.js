@@ -85,6 +85,15 @@ function init(data) {
         dice_select.appendChild(option);
     }
 
+    // add modifiers
+    var modifier_select = document.getElementById("modifier");
+    const modifier_options = Object.keys(data.modifiers);
+    for (let i = 0; i < modifier_options.length; i++) {
+        var option = document.createElement('option');
+        option.appendChild(document.createTextNode(modifier_options[i]));
+        modifier_select.appendChild(option);
+    }
+
     // clear data logic
     document.getElementById("clear-button").addEventListener("click", function() {
         var clear = confirm("Are you sure?");

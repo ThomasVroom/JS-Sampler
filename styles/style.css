@@ -143,6 +143,10 @@ body {
 }
 
 #dice {
+  width: 105px;
+}
+
+#modifier {
   width: 90px;
 }
 

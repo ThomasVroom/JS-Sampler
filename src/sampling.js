@@ -45,9 +45,9 @@ function shuffle(array) {
     }
 }
 
-// weighted sample of dice items
-function dice_sample(data, settings, sampling_args) {
-    const items = data.dice[settings.dice].filter((i) => i.domain.includes(sampling_args.person.is_f ? 'f' : 'm'));
+// samples a random element (weighted)
+function weighted_sample(items) {
+    // sum of weights
     const sum = items.map(item => item.weight).reduce((prev, next) => prev + next);
 
     // generate random number in [1, sum]
@@ -58,43 +58,61 @@ function dice_sample(data, settings, sampling_args) {
     for (let i = 0; i < items.length; i++) {
         cntr += items[i].weight;
         if (r <= cntr) { // outcome
-            var additional_samples = [];
-
-            // additional sampling
-            if (settings.additional && items[i].additional) {
-                var do_not_sample = (sampling_args.person.is_f ? data.f : data.m)[sampling_args.person.name].incompatible;
-                do_not_sample.push(sampling_args.person.name); // cannot sample self
-                var elem = items[i].additional.split(" ");
-
-                // convert for set operations
-                var f_set = new Set(sampling_args.selected_f);
-                var m_set = new Set(sampling_args.selected_m);
-                var excl = new Set(do_not_sample);
-
-                // repeat for all elements
-                for (let i = 0; i < elem.length; i++) {
-                    var range = new Set();
-                    if (elem[i] == "opp") { // opposite
-                        range = (sampling_args.person.is_f ? m_set : f_set).difference(excl);
-                    }
-                    else if (elem[i] == "f") {
-                        range = f_set.difference(excl);
-                    }
-                    else if (elem[i] == "m") {
-                        range = m_set.difference(excl);
-                    }
-                    if (range.size > 0) {
-                        var sampled = Array.from(range)[Math.floor(Math.random() * range.size)];
-                        excl.add(sampled); // exclude for same sample procedure
-                        additional_samples.push(sampled);
-                    }
-                }
-            }
-
-            // return text and any additional samples of outcome
-            return {"text": items[i].text, "additional": additional_samples};
+            return items[i];
         }
     }
+}
+
+// weighted sample of dice items
+function dice_sample(data, settings, sampling_args) {
+    const items = data.dice[settings.dice].filter((i) => i.domain.includes(sampling_args.person.is_f ? 'f' : 'm'));
+
+    // sample dice
+    var d_sample = weighted_sample(items);
+    var text = d_sample.text;
+
+    // modifier
+    if (settings.modifier) {
+        var m_sample = weighted_sample(data.modifiers[settings.modifier]).text;
+        if (m_sample) {
+            text += (" (" + m_sample + ")");
+        }
+    }
+
+    // additional sampling
+    var additional_samples = [];
+    if (settings.additional && d_sample.additional) {
+        var do_not_sample = (sampling_args.person.is_f ? data.f : data.m)[sampling_args.person.name].incompatible;
+        do_not_sample.push(sampling_args.person.name); // cannot sample self
+        var elem = d_sample.additional.split(" ");
+
+        // convert for set operations
+        var f_set = new Set(sampling_args.selected_f);
+        var m_set = new Set(sampling_args.selected_m);
+        var excl = new Set(do_not_sample);
+
+        // repeat for all elements
+        for (let i = 0; i < elem.length; i++) {
+            var range = new Set();
+            if (elem[i] == "opp") { // opposite
+                range = (sampling_args.person.is_f ? m_set : f_set).difference(excl);
+            }
+            else if (elem[i] == "f") {
+                range = f_set.difference(excl);
+            }
+            else if (elem[i] == "m") {
+                range = m_set.difference(excl);
+            }
+            if (range.size > 0) {
+                var sampled = Array.from(range)[Math.floor(Math.random() * range.size)];
+                excl.add(sampled); // exclude for same sample procedure
+                additional_samples.push(sampled);
+            }
+        }
+    }
+
+    // return text and any additional samples of outcome
+    return {"text": text, "additional": additional_samples};
 }
 
 // retrieve sampling parameters
@@ -106,6 +124,8 @@ function retrieve_settings() {
     settings.dice = String(document.getElementById("dice").value);
     if (settings.dice == "none") settings.dice = null;
     settings.additional = String(document.getElementById("additional-sampling").value) == "true";
+    settings.modifier = String(document.getElementById("modifier").value);
+    if (settings.modifier == "none") settings.modifier = null;
     return settings;
 }
 
