@@ -62,7 +62,7 @@ function dice_sample(data, settings, sampling_args) {
 
             // additional sampling
             if (settings.additional && items[i].additional) {
-                var do_not_sample = (sampling_args.person.is_f ? data.f : data.m).find(p => p.name == sampling_args.person.name).incompatible;
+                var do_not_sample = (sampling_args.person.is_f ? data.f : data.m)[sampling_args.person.name].incompatible;
                 do_not_sample.push(sampling_args.person.name); // cannot sample self
                 var elem = items[i].additional.split(" ");
 
@@ -149,7 +149,7 @@ function push_results(pairings, number, data, settings, selected_f, selected_m) 
 
     // add dice item
     if (settings.dice) {
-        var dice_result = dice_sample(data,settings, {"person": members[0], "selected_f": selected_f, "selected_m": selected_m});
+        var dice_result = dice_sample(data, settings, {"person": members[0], "selected_f": selected_f, "selected_m": selected_m});
         var dice_item = document.createElement('div');
         dice_item.className = "dice-item";
         dice_item.innerHTML = dice_result.text;
@@ -234,7 +234,7 @@ function sample(data, selected_f, selected_m) {
 
         var cntr = 0;
         var exact_match = true;
-        var incompatibilities = (variable[0] == 'f' ? data.f : data.m).find(p => p.name == variable.slice(1)).incompatible;
+        var incompatibilities = (variable[0] == 'f' ? data.f : data.m)[variable.slice(1)].incompatible;
         var prev_group = last ? keys.filter(i => last[i] == last[variable]) : null;
 
         // find all of current group
@@ -242,7 +242,7 @@ function sample(data, selected_f, selected_m) {
             if (assignment[keys[i]] == value) {
                 // 4. incompatibilities
                 if (incompatibilities.includes(keys[i].slice(1)) ||
-                   (keys[i][0] == 'f' ? data.f : data.m).find(p => p.name == keys[i].slice(1)).incompatible.includes(variable.slice(1))) {
+                   (keys[i][0] == 'f' ? data.f : data.m)[keys[i].slice(1)].incompatible.includes(variable.slice(1))) {
                     return false;
                 }
                 if (!last || !prev_group.includes(keys[i])) exact_match = false;

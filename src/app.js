@@ -5,16 +5,16 @@ function init(data) {
 
     // load presets
     const default_preset = "Presets";
-    const all_presets_f = [default_preset, "All", "None"].concat([...new Set(data.f.flatMap(item => item.presets))].slice(1));
-    const all_presets_m = [default_preset, "All", "None"].concat([...new Set(data.m.flatMap(item => item.presets))].slice(1));
+    const all_presets_f = [default_preset, "All", "None"].concat([...new Set(Object.values(data.f).flatMap(item => item.presets))].slice(1));
+    const all_presets_m = [default_preset, "All", "None"].concat([...new Set(Object.values(data.m).flatMap(item => item.presets))].slice(1));
 
     // selection logic
-    const selected_f = data.f.map(item => item.name);
-    const selected_m = data.m.map(item => item.name);
+    const selected_f = Object.keys(data.f);
+    const selected_m = Object.keys(data.m);
     const red = "rgb(200, 0, 0)";
     const green = "rgb(0, 200, 0)";
     function enable_name(element, is_f) {
-        if ((is_f ? selected_f : selected_m).indexOf(element.textContent) == -1) {
+        if (!(is_f ? selected_f : selected_m).includes(element.textContent)) {
             (is_f ? selected_f : selected_m).push(element.textContent);
         }
         element.style.color = green;
@@ -25,21 +25,21 @@ function init(data) {
         element.style.color = red;
     }
     function toggle_name(element, is_f) {
-        (is_f ? selected_f : selected_m).indexOf(element.textContent) == -1 ? enable_name(element, is_f) : disable_name(element, is_f);
+        (is_f ? selected_f : selected_m).includes(element.textContent) ? disable_name(element, is_f) : enable_name(element, is_f);
     }
 
     // add names to lists
     var f_list = document.getElementById("f-list");
-    for (let i = 0; i < data.f.length; i++) {
+    for (let i = 0; i < selected_f.length; i++) {
         var li = document.createElement('li');
-        li.appendChild(document.createTextNode(data.f[i].name));
+        li.appendChild(document.createTextNode(selected_f[i]));
         li.addEventListener("click", function() {toggle_name(this, true)});
         f_list.appendChild(li);
     }
     var m_list = document.getElementById("m-list");
-    for (let i = 0; i < data.m.length; i++) {
+    for (let i = 0; i < selected_m.length; i++) {
         var li = document.createElement('li');
-        li.appendChild(document.createTextNode(data.m[i].name));
+        li.appendChild(document.createTextNode(selected_m[i]));
         li.addEventListener("click", function() {toggle_name(this, false)});
         m_list.appendChild(li);
     }
@@ -51,7 +51,7 @@ function init(data) {
 
         // apply preset
         var list = is_f ? f_list : m_list;
-        var d = is_f ? data.f : data.m;
+        var d = Object.values(is_f ? data.f : data.m);
         for (let i = 0; i < list.children.length; i++) {
             d[i].presets.includes(preset) ? enable_name(list.children[i], is_f) : disable_name(list.children[i], is_f);
         }
@@ -85,7 +85,7 @@ function init(data) {
         dice_select.appendChild(option);
     }
 
-    // clear cache logic
+    // clear data logic
     document.getElementById("clear-button").addEventListener("click", function() {
         var clear = confirm("Are you sure?");
         if (clear) {
