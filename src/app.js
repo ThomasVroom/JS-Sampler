@@ -14,7 +14,9 @@ function init(data) {
     const red = "rgb(200, 0, 0)";
     const green = "rgb(0, 200, 0)";
     function enable_name(element, is_f) {
-        (is_f ? selected_f : selected_m).push(element.textContent);
+        if ((is_f ? selected_f : selected_m).indexOf(element.textContent) == -1) {
+            (is_f ? selected_f : selected_m).push(element.textContent);
+        }
         element.style.color = green;
     }
     function disable_name(element, is_f) {

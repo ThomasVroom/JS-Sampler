@@ -241,7 +241,8 @@ function sample(data, selected_f, selected_m) {
         for (let i = 0; i < keys.length; i++) {
             if (assignment[keys[i]] == value) {
                 // 4. incompatibilities
-                if (incompatibilities.includes(keys[i].slice(1))) {
+                if (incompatibilities.includes(keys[i].slice(1)) ||
+                   (keys[i][0] == 'f' ? data.f : data.m).find(p => p.name == keys[i].slice(1)).incompatible.includes(variable.slice(1))) {
                     return false;
                 }
                 if (!last || !prev_group.includes(keys[i])) exact_match = false;
