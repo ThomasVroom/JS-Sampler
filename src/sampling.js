@@ -82,30 +82,25 @@ function dice_sample(data, settings, sampling_args) {
     // additional sampling
     var additional_samples = [];
     if (settings.additional && d_sample.additional) {
-        var do_not_sample = (sampling_args.person.is_f ? data.f : data.m)[sampling_args.person.name].incompatible;
-        do_not_sample.push(sampling_args.person.name); // cannot sample self
-        var elem = d_sample.additional.split(" ");
-
-        // convert for set operations
-        var f_set = new Set(sampling_args.selected_f);
-        var m_set = new Set(sampling_args.selected_m);
-        var excl = new Set(do_not_sample);
+        var do_not_sample = new Set((sampling_args.person.is_f ? data.f : data.m)[sampling_args.person.name].incompatible);
+        do_not_sample.add(sampling_args.person.name); // cannot sample self
 
         // repeat for all elements
+        var elem = d_sample.additional.split(" ");
         for (let i = 0; i < elem.length; i++) {
             var range = new Set();
             if (elem[i] == "opp") { // opposite
-                range = (sampling_args.person.is_f ? m_set : f_set).difference(excl);
+                range = (sampling_args.person.is_f ? sampling_args.selected_m : sampling_args.selected_f).difference(do_not_sample);
             }
             else if (elem[i] == "f") {
-                range = f_set.difference(excl);
+                range = sampling_args.selected_f.difference(do_not_sample);
             }
             else if (elem[i] == "m") {
-                range = m_set.difference(excl);
+                range = sampling_args.selected_m.difference(do_not_sample);
             }
             if (range.size > 0) {
                 var sampled = Array.from(range)[Math.floor(Math.random() * range.size)];
-                excl.add(sampled); // exclude for same sample procedure
+                do_not_sample.add(sampled); // exclude for same sample procedure
                 additional_samples.push(sampled);
             }
         }
@@ -178,7 +173,7 @@ function push_results(pairings, number, data, settings, selected_f, selected_m) 
         var addit = dice_result.additional;
         for (let i = 0; i < addit.length; i++) {
             if (i == 0) dice_item.innerHTML += " → ";
-            dice_item.innerHTML += ("<span class=\""+(selected_f.includes(addit[i]) ? "f" : "m")+"\">"+addit[i]+"</span>");
+            dice_item.innerHTML += ("<span class=\""+(selected_f.has(addit[i]) ? "f" : "m")+"\">"+addit[i]+"</span>");
             if (i < addit.length - 1) dice_item.innerHTML += ", ";
         }
         sub_frag.appendChild(dice_item);
@@ -213,8 +208,8 @@ function sample(data, selected_f, selected_m) {
     reset();
 
     // VARIABLES
-    var less_f = selected_f.length < selected_m.length;
-    var variables = selected_f.map(i => 'f' + i).concat(selected_m.map(i => 'm' + i));
+    var less_f = selected_f.size < selected_m.size;
+    var variables = [...selected_f].map(i => 'f' + i).concat([...selected_m].map(i => 'm' + i));
     shuffle(variables); // solver is deterministic -> add randomization beforehand
 
     // DOMAINS
@@ -255,7 +250,7 @@ function sample(data, selected_f, selected_m) {
         var cntr = 0;
         var exact_match = true;
         var incompatibilities = (variable[0] == 'f' ? data.f : data.m)[variable.slice(1)].incompatible;
-        var prev_group = last ? keys.filter(i => last[i] == last[variable]) : null;
+        var prev_group = last ? keys.filter(i => last[i] && last[i] == last[variable]) : null;
 
         // find all of current group
         for (let i = 0; i < keys.length; i++) {

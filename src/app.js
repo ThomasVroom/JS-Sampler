@@ -9,37 +9,34 @@ function init(data) {
     const all_presets_m = [default_preset, "All", "None"].concat([...new Set(Object.values(data.m).flatMap(item => item.presets))].slice(1));
 
     // selection logic
-    const selected_f = Object.keys(data.f);
-    const selected_m = Object.keys(data.m);
+    const selected_f = new Set(Object.keys(data.f));
+    const selected_m = new Set(Object.keys(data.m));
     const red = "rgb(200, 0, 0)";
     const green = "rgb(0, 200, 0)";
     function enable_name(element, is_f) {
-        if (!(is_f ? selected_f : selected_m).includes(element.textContent)) {
-            (is_f ? selected_f : selected_m).push(element.textContent);
-        }
+        (is_f ? selected_f : selected_m).add(element.textContent);
         element.style.color = green;
     }
     function disable_name(element, is_f) {
-        let i = (is_f ? selected_f : selected_m).indexOf(element.textContent);
-        (is_f ? selected_f : selected_m).splice(i, 1);
+        (is_f ? selected_f : selected_m).delete(element.textContent);
         element.style.color = red;
     }
     function toggle_name(element, is_f) {
-        (is_f ? selected_f : selected_m).includes(element.textContent) ? disable_name(element, is_f) : enable_name(element, is_f);
+        (is_f ? selected_f : selected_m).has(element.textContent) ? disable_name(element, is_f) : enable_name(element, is_f);
     }
 
     // add names to lists
     var f_list = document.getElementById("f-list");
-    for (let i = 0; i < selected_f.length; i++) {
+    for (let i of selected_f) {
         var li = document.createElement('li');
-        li.appendChild(document.createTextNode(selected_f[i]));
+        li.appendChild(document.createTextNode(i));
         li.addEventListener("click", function() {toggle_name(this, true)});
         f_list.appendChild(li);
     }
     var m_list = document.getElementById("m-list");
-    for (let i = 0; i < selected_m.length; i++) {
+    for (let i of selected_m) {
         var li = document.createElement('li');
-        li.appendChild(document.createTextNode(selected_m[i]));
+        li.appendChild(document.createTextNode(i));
         li.addEventListener("click", function() {toggle_name(this, false)});
         m_list.appendChild(li);
     }
