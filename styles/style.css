@@ -1,6 +1,7 @@
 * {
   box-sizing: border-box;
   touch-action: manipulation; /* disables zooming on double-tap */
+  overscroll-behavior: none; /* disables scrolling on ios */
 }
 
 body {
