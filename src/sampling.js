@@ -167,6 +167,17 @@ function push_results(pairings, number, data, settings, selected_f, selected_m) 
         var dice_result = dice_sample(data, settings, {"person": members[0], "selected_f": selected_f, "selected_m": selected_m});
         var dice_item = document.createElement('div');
         dice_item.className = "dice-item";
+
+        // convert to image if url
+        if (dice_result.text.startsWith("https://")) {
+            var image = document.createElement('img');
+            image.className = "image";
+            image.src = dice_result.text.split(" ")[0];
+            sub_frag.appendChild(image);
+
+            // remove url, keep modifier
+            dice_result.text = dice_result.text.endsWith(")") ? dice_result.text.split(" ")[1] : "";
+        }
         dice_item.innerHTML = dice_result.text;
 
         // additional samples

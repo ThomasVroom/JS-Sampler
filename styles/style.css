@@ -196,6 +196,11 @@ body {
   color: pink;
 }
 
+.image {
+  width: 100%;
+  margin-bottom: 5px;
+}
+
 .dice-item {
   font-size: 15px;
   color: darkgray;
