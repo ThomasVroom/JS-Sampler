@@ -159,6 +159,8 @@ body {
   grid-template-rows: 1fr auto;
   margin-top: 20px;
   margin-bottom: 20px;
+  overflow: auto; /* make scrollable */
+  max-height: 57.5vh;
 }
 
 .file-input {
