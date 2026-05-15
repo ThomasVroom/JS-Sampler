@@ -216,7 +216,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   align-items: center; /* center vertically */
-  height: 10vh;
+  height: 9vh;
 }
 
 .footer-button {

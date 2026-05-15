@@ -176,7 +176,7 @@ function push_results(pairings, number, data, settings, selected_f, selected_m) 
             sub_frag.appendChild(image);
 
             // remove url, keep modifier
-            dice_result.text = dice_result.text.endsWith(")") ? dice_result.text.split(" ")[1] : "";
+            dice_result.text = dice_result.text.endsWith(")") ? dice_result.text.split(" ").slice(1).join(" ") : "";
         }
         dice_item.innerHTML = dice_result.text;
 
