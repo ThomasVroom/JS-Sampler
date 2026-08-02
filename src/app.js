@@ -121,7 +121,7 @@ function init(data) {
         sample(data, selected_f, selected_m);
         setTimeout(() => { // automatically scroll to bottom
             results.scrollTop = results.scrollHeight;
-        }, 30); // timeout to give browser time to update height
+        }, 35); // timeout to give browser time to update height
     });
     var reset_button = document.getElementById("reset-button");
     reset_button.addEventListener("click", reset);
