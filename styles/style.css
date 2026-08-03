@@ -157,10 +157,10 @@ body {
   border-style: none none solid none;
   display: grid;
   grid-template-rows: 1fr auto;
-  margin-top: 20px;
+  margin-top: 10px;
   margin-bottom: 10px;
   overflow: auto; /* make scrollable */
-  max-height: 57.5vh;
+  max-height: 58vh;
 }
 
 .file-input {
