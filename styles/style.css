@@ -160,7 +160,7 @@ body {
   margin-top: 10px;
   margin-bottom: 10px;
   overflow: auto; /* make scrollable */
-  max-height: 58vh;
+  max-height: 60vh;
 }
 
 .file-input {
@@ -218,7 +218,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   align-items: center; /* center vertically */
-  height: 9vh;
+  height: 8vh;
 }
 
 .footer-button {
