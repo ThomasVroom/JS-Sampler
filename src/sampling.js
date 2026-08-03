@@ -208,22 +208,24 @@ function sample(data, selected_f, selected_m) {
         return;
     }
 
+    // shuffle groups
+    shuffle(possible_groups);
+    possible_groups.sort((a, b) => { // sort by group size, then by balance
+        let a_f = alloc_f[a - 1], a_m = alloc_m[a - 1], b_f = alloc_f[b - 1], b_m = alloc_m[b - 1];
+        let r = (b_f + b_m) - (a_f + a_m);
+        return r != 0 ? r : (a_f > a_m ? a_f / a_m : a_m / a_f) - (b_f > b_m ? b_f / b_m : b_m / b_f);
+    });
+
     // variables and domains
     const domains = {};
-    shuffle(possible_groups);
-    for (let i = 0, j, k, group_number; i < possible_groups.length; i++) {
-        // make sure last group number is unshuffled
-        group_number = possible_groups[i];
-        if (i == possible_groups.length - 1) group_number = possible_groups.length;
-        else if (group_number == possible_groups.length) group_number = possible_groups[possible_groups.length - 1];
-
-        for (j = 1; j <= alloc_f[i]; j++) {
-            k = group_number + " f " + j
+    for (let i = 0, j, k; i < possible_groups.length; i++) {
+        for (j = 1; j <= alloc_f[possible_groups[i] - 1]; j++) {
+            k = (i + 1) + " f " + j
             domains[k] = Array.from(selected_f);
             shuffle(domains[k]);
         }
-        for (j = 1; j <= alloc_m[i]; j++) {
-            k = group_number + " m " + j
+        for (j = 1; j <= alloc_m[possible_groups[i] - 1]; j++) {
+            k = (i + 1) + " m " + j
             domains[k] = Array.from(selected_m);
             shuffle(domains[k]);
         }
