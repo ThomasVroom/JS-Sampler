@@ -15,7 +15,7 @@ body {
   grid-template-rows   : auto 1fr auto;
   grid-template-areas: "hd hd hd" "lt cn rt" "ft ft ft";
   gap: 3px;
-  padding-bottom: 25px; /* empty space at bottom of page */
+  padding-bottom: 30px; /* empty space at bottom of page */
   user-select: none;
   -webkit-user-select: none; /* no text selection on Safari */
 }
@@ -160,7 +160,7 @@ body {
   margin-top: 20px;
   margin-bottom: 20px;
   overflow: auto; /* make scrollable */
-  max-height: 57.5vh;
+  max-height: 60vh;
 }
 
 .file-input {
