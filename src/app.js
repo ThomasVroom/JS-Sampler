@@ -140,7 +140,7 @@ else {
     // file reading logic
     document.getElementById("data-upload").addEventListener("change", function() {
         var file = this.files[0];
-        if (!file.name.endsWith("data.json")) {
+        if (!(file.name.endsWith("data.json") || file.name.endsWith("data.jsonc"))) {
             alert("Incorrect file.");
             return;
         }
@@ -148,7 +148,7 @@ else {
         // read file
         const reader = new FileReader();
         reader.onload = function() {
-            data = JSON.parse(reader.result);
+            data = JSONC.parse(reader.result); // parses both json and jsonc
             localStorage.setItem("data", JSON.stringify(data));
             init(data);
         };
