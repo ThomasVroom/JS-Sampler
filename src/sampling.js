@@ -34,11 +34,14 @@ function weighted_sample(items) {
 
 // weighted sample of dice items
 function dice_sample(data, settings, sampling_args) {
-    const items = data.dice[settings.dice].filter((i) => i.domain.includes(sampling_args.person.is_f ? 'f' : 'm'));
+    const items = data.dice[settings.dice]
 
     // sample dice
     var d_sample = weighted_sample(items);
     var text = d_sample.text;
+    if (typeof text !== "string") {
+        text = sampling_args.person.is_f ? text.f : text.m;
+    }
 
     // modifier
     if (settings.modifier) {
@@ -50,28 +53,21 @@ function dice_sample(data, settings, sampling_args) {
 
     // additional sampling
     var additional_samples = [];
-    if (settings.additional && d_sample.additional) {
+    var n_samples = d_sample.add;
+    if (settings.additional && n_samples > 0) {
         var do_not_sample = new Set((sampling_args.person.is_f ? data.f : data.m)[sampling_args.person.name].incompatible);
         do_not_sample.add(sampling_args.person.name); // cannot sample self
 
         // repeat for all elements
-        var elem = d_sample.additional.split(" ");
-        for (let i = 0; i < elem.length; i++) {
-            var range = new Set();
-            if (elem[i] == "opp") { // opposite
-                range = (sampling_args.person.is_f ? sampling_args.selected_m : sampling_args.selected_f).difference(do_not_sample);
-            }
-            else if (elem[i] == "f") {
-                range = sampling_args.selected_f.difference(do_not_sample);
-            }
-            else if (elem[i] == "m") {
-                range = sampling_args.selected_m.difference(do_not_sample);
-            }
+        var range = new Set();
+        while (n_samples > 0) {
+            range = (sampling_args.person.is_f ? sampling_args.selected_m : sampling_args.selected_f).difference(do_not_sample);
             if (range.size > 0) {
                 var sampled = Array.from(range)[Math.floor(Math.random() * range.size)];
                 do_not_sample.add(sampled); // exclude for same sample procedure
                 additional_samples.push(sampled);
             }
+            n_samples--;
         }
     }
 
