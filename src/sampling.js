@@ -36,11 +36,14 @@ function weighted_sample(items) {
 function dice_sample(data, settings, sampling_args) {
     const items = data.dice[settings.dice]
 
+    // ff rate
+    var ff_sample = sampling_args.person.is_f && Math.random() < settings.ff_rate;
+
     // sample dice
     var d_sample = weighted_sample(items);
     var text = d_sample.text;
     if (typeof text !== "string") {
-        text = sampling_args.person.is_f ? text.f : text.m;
+        text = sampling_args.person.is_f ? (ff_sample ? text.m : text.f) : text.m;
     }
 
     // modifier
@@ -61,7 +64,8 @@ function dice_sample(data, settings, sampling_args) {
         // repeat for all elements
         var range = new Set();
         while (n_samples > 0) {
-            range = (sampling_args.person.is_f ? sampling_args.selected_m : sampling_args.selected_f).difference(do_not_sample);
+            range = sampling_args.person.is_f ? (ff_sample ? sampling_args.selected_f : sampling_args.selected_m) : sampling_args.selected_f
+            range = range.difference(do_not_sample);
             if (range.size > 0) {
                 var sampled = Array.from(range)[Math.floor(Math.random() * range.size)];
                 do_not_sample.add(sampled); // exclude for same sample procedure
@@ -86,6 +90,7 @@ function retrieve_settings() {
     settings.additional = String(document.getElementById("additional-sampling").value) == "true";
     settings.modifier = String(document.getElementById("modifier").value);
     if (settings.modifier == "none") settings.modifier = null;
+    settings.ff_rate = parseInt(String(document.getElementById("ff-rate").value).slice(0, -1))/100;
     return settings;
 }
 
